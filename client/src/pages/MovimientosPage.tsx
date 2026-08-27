@@ -67,7 +67,7 @@ export function MovimientosPage() {
       </div>
 
       <Card className="p-4 mb-4">
-        <div className="mb-3 flex items-center justify-center gap-4">
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <div className="text-xs text-muted-foreground uppercase">Total caja</div>
           {Object.entries(caja).length === 0 ? (
             <div className="text-muted-foreground">—</div>
@@ -101,7 +101,7 @@ export function MovimientosPage() {
 
       <FiltrosBar filtros={filtros} onChange={cambiarFiltros} propiedades={propiedades} mostrarTipo mostrarTexto />
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-border text-sm text-muted-foreground">
@@ -143,7 +143,7 @@ export function MovimientosPage() {
         </table>
       </Card>
 
-      <div className="flex items-center justify-between mt-4 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
         <label className="flex items-center gap-2 text-muted-foreground">
           Por página
           <select

@@ -78,7 +78,7 @@ export function PropiedadesPage() {
         <Button type="submit">Agregar</Button>
       </form>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <tbody>
             {propiedades.map((p) => (

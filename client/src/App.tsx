@@ -21,8 +21,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <nav className="border-b border-border px-4 py-3 flex items-center justify-between max-w-5xl mx-auto">
-        <div className="flex items-center gap-4">
+      <nav className="border-b border-border px-4 py-3 flex flex-wrap items-center justify-between gap-y-2 max-w-5xl mx-auto">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <span className="font-semibold">Gastos</span>
           <NavLink to="/movimientos" className={linkClass}>
             Movimientos
