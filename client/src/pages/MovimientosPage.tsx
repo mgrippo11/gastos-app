@@ -7,6 +7,7 @@ import { MovimientoFormModal } from '../components/MovimientoFormModal'
 import { api } from '../lib/api'
 import { formatCurrency, formatDateARS } from '../lib/format'
 import { filtrarMovimientos, type FiltrosMovimiento } from '../lib/filtros'
+import { balanceGeneral, nombrePropiedad, resumenPorPropiedad } from '../lib/totals'
 import type { Movimiento, Propiedad } from '../types'
 
 // Listado de movimientos con filtros (propiedad, tipo, moneda, rango de
@@ -38,6 +39,9 @@ export function MovimientosPage() {
   if (loading) return <p className="p-6 text-muted-foreground">Cargando...</p>
 
   const filtrados = filtrarMovimientos(movimientos, filtros)
+  // Caja: siempre sobre todos los movimientos, sin importar los filtros de la tabla.
+  const caja = balanceGeneral(movimientos)
+  const porPropiedad = resumenPorPropiedad(movimientos)
 
   return (
     <div className="p-6">
@@ -45,6 +49,36 @@ export function MovimientosPage() {
         <h1 className="text-2xl font-semibold">Movimientos</h1>
         <Button onClick={() => setEditando('nuevo')}>Nuevo</Button>
       </div>
+
+      <Card className="p-4 mb-4">
+        <div className="flex flex-wrap gap-x-8 gap-y-2 mb-3">
+          <div>
+            <div className="text-xs text-muted-foreground uppercase">Caja</div>
+            {Object.entries(caja).length === 0 && <div className="text-muted-foreground">—</div>}
+            {Object.entries(caja).map(([moneda, monto]) => (
+              <div
+                key={moneda}
+                className={`text-xl font-semibold ${monto < 0 ? 'text-danger' : 'text-success'}`}
+              >
+                {formatCurrency(monto, moneda as Movimiento['moneda'])}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {porPropiedad.length > 0 && (
+          <div className="border-t border-border pt-3 flex flex-wrap gap-x-8 gap-y-2 text-sm">
+            {porPropiedad.map((r) => (
+              <div key={`${r.propiedadId}-${r.moneda}`}>
+                <span className="text-muted-foreground">{nombrePropiedad(propiedades, r.propiedadId)}: </span>
+                <span className={r.balance < 0 ? 'text-danger' : 'text-success'}>
+                  {formatCurrency(r.balance, r.moneda)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <FiltrosBar filtros={filtros} onChange={setFiltros} propiedades={propiedades} mostrarTipo />
 
