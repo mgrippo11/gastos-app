@@ -67,19 +67,22 @@ export function MovimientosPage() {
       </div>
 
       <Card className="p-4 mb-4">
-        <div className="flex flex-wrap gap-x-8 gap-y-2 mb-3">
-          <div>
-            <div className="text-xs text-muted-foreground uppercase">Caja</div>
-            {Object.entries(caja).length === 0 && <div className="text-muted-foreground">—</div>}
-            {Object.entries(caja).map(([moneda, monto]) => (
-              <div
-                key={moneda}
-                className={`text-xl font-semibold ${monto < 0 ? 'text-danger' : 'text-success'}`}
-              >
-                {formatCurrency(monto, moneda as Movimiento['moneda'])}
-              </div>
-            ))}
-          </div>
+        <div className="mb-3">
+          <div className="text-xs text-muted-foreground uppercase text-center mb-1">Caja</div>
+          {Object.entries(caja).length === 0 ? (
+            <div className="text-muted-foreground text-center">—</div>
+          ) : (
+            <div className="flex items-center justify-center divide-x divide-border">
+              {Object.entries(caja).map(([moneda, monto]) => (
+                <div
+                  key={moneda}
+                  className={`px-6 text-xl font-semibold ${monto < 0 ? 'text-danger' : 'text-success'}`}
+                >
+                  {formatCurrency(monto, moneda as Movimiento['moneda'])}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {porPropiedad.length > 0 && (
