@@ -8,6 +8,8 @@ interface Props {
   // Si no, solo Moneda + rango de fechas (DashboardPage).
   propiedades?: Propiedad[]
   mostrarTipo?: boolean
+  // Buscador de texto libre sobre Gasto (MovimientosPage).
+  mostrarTexto?: boolean
   // DashboardPage no puede graficar sin elegir una sola moneda (ver totals.ts:
   // los resúmenes vienen desglosados por moneda). Oculta la opción "todas".
   requiereMoneda?: boolean
@@ -17,9 +19,19 @@ const selectClass = 'border border-border bg-card rounded px-2 py-1'
 
 // Barra de filtros compartida entre MovimientosPage y DashboardPage — mismo
 // patrón de selects + rango de fechas, cada página elige qué campos mostrar.
-export function FiltrosBar({ filtros, onChange, propiedades, mostrarTipo, requiereMoneda }: Props) {
+export function FiltrosBar({ filtros, onChange, propiedades, mostrarTipo, mostrarTexto, requiereMoneda }: Props) {
   return (
     <div className="flex flex-wrap gap-3 mb-4 text-sm items-center">
+      {mostrarTexto && (
+        <input
+          type="text"
+          value={filtros.texto ?? ''}
+          onChange={(e) => onChange({ ...filtros, texto: e.target.value || undefined })}
+          placeholder="Buscar por gasto..."
+          className={`${selectClass} min-w-48`}
+        />
+      )}
+
       {propiedades && (
         <select
           value={filtros.propiedadId ?? ''}

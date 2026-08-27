@@ -25,6 +25,12 @@ describe('filtrarMovimientos', () => {
     expect(filtrarMovimientos(movimientos, { moneda: 'USD' })).toEqual([movimientos[2]])
   })
 
+  it('filtra por texto en el gasto, case-insensitive', () => {
+    expect(filtrarMovimientos(movimientos, { texto: 'alqui' })).toHaveLength(2)
+    expect(filtrarMovimientos(movimientos, { texto: 'EXPEN' })).toEqual([movimientos[1]])
+    expect(filtrarMovimientos(movimientos, { texto: '' })).toHaveLength(3)
+  })
+
   it('filtra por rango de fechas inclusive', () => {
     const resultado = filtrarMovimientos(movimientos, { desde: '2026-01-10', hasta: '2026-01-10' })
     expect(resultado).toEqual([movimientos[1]])

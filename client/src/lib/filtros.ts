@@ -7,6 +7,8 @@ export interface FiltrosMovimiento {
   // Fechas ISO (yyyy-mm-dd), inclusive.
   desde?: string
   hasta?: string
+  // Búsqueda por texto libre sobre el campo Gasto (case-insensitive, substring).
+  texto?: string
 }
 
 // Función pura: usada tanto por MovimientosPage (todos los filtros) como
@@ -21,6 +23,7 @@ export function filtrarMovimientos(
     if (filtros.moneda !== undefined && m.moneda !== filtros.moneda) return false
     if (filtros.desde !== undefined && m.fecha < filtros.desde) return false
     if (filtros.hasta !== undefined && m.fecha > filtros.hasta) return false
+    if (filtros.texto && !m.gasto.toLowerCase().includes(filtros.texto.toLowerCase())) return false
     return true
   })
 }

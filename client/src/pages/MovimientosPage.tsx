@@ -96,7 +96,7 @@ export function MovimientosPage() {
         )}
       </Card>
 
-      <FiltrosBar filtros={filtros} onChange={cambiarFiltros} propiedades={propiedades} mostrarTipo />
+      <FiltrosBar filtros={filtros} onChange={cambiarFiltros} propiedades={propiedades} mostrarTipo mostrarTexto />
 
       <Card className="overflow-hidden">
         <table className="w-full text-left border-collapse">
