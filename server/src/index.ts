@@ -1,15 +1,9 @@
-import cors from 'cors'
-import express from 'express'
-import './db.js' // corre migraciones/seed al importar
-import { movimientosRouter } from './routes/movimientos.js'
-import { propiedadesRouter } from './routes/propiedades.js'
+import { app } from './app.js'
+import { dbReady } from './db.js'
 
-const app = express()
-app.use(cors())
-app.use(express.json())
-
-app.use('/api/movimientos', movimientosRouter)
-app.use('/api/propiedades', propiedadesRouter)
+// Entrypoint local/self-hosted (npm run dev, npm start). En Vercel se usa
+// /api/index.ts en su lugar, que reexporta `app` sin .listen().
+await dbReady
 
 const PORT = process.env.PORT ?? 3001
 app.listen(PORT, () => {

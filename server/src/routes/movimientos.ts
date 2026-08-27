@@ -4,41 +4,40 @@ import { rowToMovimiento, type MovimientoInput, type MovimientoRow } from '../ty
 
 export const movimientosRouter = Router()
 
-movimientosRouter.get('/', (_req, res) => {
-  const rows = db
-    .prepare('SELECT * FROM movimientos ORDER BY fecha DESC, id DESC')
-    .all() as MovimientoRow[]
+movimientosRouter.get('/', async (_req, res) => {
+  const result = await db.execute('SELECT * FROM movimientos ORDER BY fecha DESC, id DESC')
+  const rows = result.rows as unknown as MovimientoRow[]
   res.json(rows.map(rowToMovimiento))
 })
 
-movimientosRouter.post('/', (req, res) => {
+movimientosRouter.post('/', async (req, res) => {
   const input = req.body as MovimientoInput
-  const result = db
-    .prepare(
-      'INSERT INTO movimientos (gasto, propiedad_id, tipo, monto, fecha, moneda) VALUES (?, ?, ?, ?, ?, ?)',
-    )
-    .run(input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda)
+  const result = await db.execute({
+    sql: 'INSERT INTO movimientos (gasto, propiedad_id, tipo, monto, fecha, moneda) VALUES (?, ?, ?, ?, ?, ?)',
+    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda],
+  })
 
-  const row = db
-    .prepare('SELECT * FROM movimientos WHERE id = ?')
-    .get(result.lastInsertRowid) as MovimientoRow
-  res.status(201).json(rowToMovimiento(row))
+  const selected = await db.execute({
+    sql: 'SELECT * FROM movimientos WHERE id = ?',
+    args: [Number(result.lastInsertRowid)],
+  })
+  res.status(201).json(rowToMovimiento(selected.rows[0] as unknown as MovimientoRow))
 })
 
-movimientosRouter.put('/:id', (req, res) => {
+movimientosRouter.put('/:id', async (req, res) => {
   const input = req.body as MovimientoInput
-  db.prepare(
-    'UPDATE movimientos SET gasto = ?, propiedad_id = ?, tipo = ?, monto = ?, fecha = ?, moneda = ? WHERE id = ?',
-  ).run(input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, req.params.id)
+  await db.execute({
+    sql: 'UPDATE movimientos SET gasto = ?, propiedad_id = ?, tipo = ?, monto = ?, fecha = ?, moneda = ? WHERE id = ?',
+    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, req.params.id],
+  })
 
-  const row = db
-    .prepare('SELECT * FROM movimientos WHERE id = ?')
-    .get(req.params.id) as MovimientoRow | undefined
+  const selected = await db.execute({ sql: 'SELECT * FROM movimientos WHERE id = ?', args: [req.params.id] })
+  const row = selected.rows[0] as unknown as MovimientoRow | undefined
   if (!row) return res.status(404).end()
   res.json(rowToMovimiento(row))
 })
 
-movimientosRouter.delete('/:id', (req, res) => {
-  db.prepare('DELETE FROM movimientos WHERE id = ?').run(req.params.id)
+movimientosRouter.delete('/:id', async (req, res) => {
+  await db.execute({ sql: 'DELETE FROM movimientos WHERE id = ?', args: [req.params.id] })
   res.status(204).end()
 })

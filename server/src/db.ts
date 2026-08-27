@@ -1,56 +1,64 @@
-import Database from 'better-sqlite3'
+import { createClient } from '@libsql/client'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Un solo archivo SQLite en server/data/gastos.db. Sin servicios externos:
-// alcanza para uso local / de una sola familia (ver CLAUDE.md, decisión de stack).
+// En prod (Vercel), TURSO_DATABASE_URL/TURSO_AUTH_TOKEN apuntan a la DB
+// hosteada (funciones serverless no tienen disco persistente). En dev local
+// no hace falta cuenta ni conexión: cae a un archivo SQLite local, mismo
+// wire protocol (libSQL es superset de SQLite) — ver CLAUDE.md.
 const dbPath = path.join(__dirname, '..', 'data', 'gastos.db')
 
-export const db = new Database(dbPath)
-db.pragma('journal_mode = WAL')
+export const db = process.env.TURSO_DATABASE_URL
+  ? createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN })
+  : createClient({ url: `file:${dbPath}` })
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS propiedades (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL UNIQUE
-  );
+async function migrate() {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS propiedades (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL UNIQUE
+    )
+  `)
 
-  CREATE TABLE IF NOT EXISTS movimientos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    gasto TEXT NOT NULL,
-    propiedad_id INTEGER NOT NULL REFERENCES propiedades(id),
-    tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'pago')),
-    monto REAL NOT NULL,
-    fecha TEXT NOT NULL,
-    moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD'))
-  );
-`)
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS movimientos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      gasto TEXT NOT NULL,
+      propiedad_id INTEGER NOT NULL REFERENCES propiedades(id),
+      tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'pago')),
+      monto REAL NOT NULL,
+      fecha TEXT NOT NULL,
+      moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD'))
+    )
+  `)
 
-// Migración para DBs creadas antes de agregar la columna moneda (movimientos
-// históricos: todo en Pesos, ver CLAUDE.md).
-const tieneColumnaMoneda = (db.pragma('table_info(movimientos)') as { name: string }[]).some(
-  (col) => col.name === 'moneda',
-)
-if (!tieneColumnaMoneda) {
-  db.exec(
-    `ALTER TABLE movimientos ADD COLUMN moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD'))`,
-  )
+  // Migración para DBs creadas antes de agregar la columna moneda (movimientos
+  // históricos: todo en Pesos, ver CLAUDE.md).
+  const info = await db.execute(`PRAGMA table_info(movimientos)`)
+  const tieneColumnaMoneda = info.rows.some((col) => col.name === 'moneda')
+  if (!tieneColumnaMoneda) {
+    await db.execute(
+      `ALTER TABLE movimientos ADD COLUMN moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD'))`,
+    )
+  }
+
+  // Catálogo inicial según la planilla de origen. "Generales" es la categoría
+  // comodín para gastos no asociados a una propiedad específica.
+  const PROPIEDADES_INICIALES = [
+    'Generales',
+    'Timbo',
+    'Rivadavia',
+    'Independencia',
+    'Yapeyu',
+    'Mar del Plata',
+  ]
+  for (const nombre of PROPIEDADES_INICIALES) {
+    await db.execute({ sql: 'INSERT OR IGNORE INTO propiedades (nombre) VALUES (?)', args: [nombre] })
+  }
 }
 
-// Catálogo inicial según la planilla de origen. "Generales" es la categoría
-// comodín para gastos no asociados a una propiedad específica.
-const PROPIEDADES_INICIALES = [
-  'Generales',
-  'Timbo',
-  'Rivadavia',
-  'Independencia',
-  'Yapeyu',
-  'Mar del Plata',
-]
-
-const seedPropiedad = db.prepare('INSERT OR IGNORE INTO propiedades (nombre) VALUES (?)')
-for (const nombre of PROPIEDADES_INICIALES) {
-  seedPropiedad.run(nombre)
-}
+// Se importa una sola vez al arrancar (index.ts / la Vercel function esperan
+// esta promesa antes de aceptar requests).
+export const dbReady = migrate()
