@@ -18,6 +18,8 @@ export function MovimientosPage() {
   const [loading, setLoading] = useState(true)
   const [filtros, setFiltros] = useState<FiltrosMovimiento>({})
   const [editando, setEditando] = useState<Movimiento | 'nuevo' | null>(null)
+  const [pageSize, setPageSize] = useState(10)
+  const [page, setPage] = useState(1)
 
   function cargar() {
     return Promise.all([api.getMovimientos(), api.getPropiedades()]).then(([mov, prop]) => {
@@ -42,6 +44,20 @@ export function MovimientosPage() {
   // Caja: siempre sobre todos los movimientos, sin importar los filtros de la tabla.
   const caja = balanceGeneral(movimientos)
   const porPropiedad = resumenPorPropiedad(movimientos)
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / pageSize))
+  const paginaActual = Math.min(page, totalPaginas)
+  const paginados = filtrados.slice((paginaActual - 1) * pageSize, paginaActual * pageSize)
+
+  function cambiarFiltros(nuevos: FiltrosMovimiento) {
+    setFiltros(nuevos)
+    setPage(1)
+  }
+
+  function cambiarPageSize(size: number) {
+    setPageSize(size)
+    setPage(1)
+  }
 
   return (
     <div className="p-6">
@@ -80,7 +96,7 @@ export function MovimientosPage() {
         )}
       </Card>
 
-      <FiltrosBar filtros={filtros} onChange={setFiltros} propiedades={propiedades} mostrarTipo />
+      <FiltrosBar filtros={filtros} onChange={cambiarFiltros} propiedades={propiedades} mostrarTipo />
 
       <Card className="overflow-hidden">
         <table className="w-full text-left border-collapse">
@@ -96,7 +112,7 @@ export function MovimientosPage() {
             </tr>
           </thead>
           <tbody>
-            {filtrados.map((m) => (
+            {paginados.map((m) => (
               <tr key={m.id} className="border-b border-border last:border-0 hover:bg-muted/50">
                 <td className="py-2 px-4">{m.gasto}</td>
                 <td className="py-2 px-4">
@@ -123,6 +139,37 @@ export function MovimientosPage() {
           </tbody>
         </table>
       </Card>
+
+      <div className="flex items-center justify-between mt-4 text-sm">
+        <label className="flex items-center gap-2 text-muted-foreground">
+          Por página
+          <select
+            value={pageSize}
+            onChange={(e) => cambiarPageSize(Number(e.target.value))}
+            className="border border-border bg-background rounded px-2 py-1"
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </label>
+
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" disabled={paginaActual <= 1} onClick={() => setPage(paginaActual - 1)}>
+            Anterior
+          </Button>
+          <span className="text-muted-foreground">
+            Página {paginaActual} de {totalPaginas}
+          </span>
+          <Button
+            variant="ghost"
+            disabled={paginaActual >= totalPaginas}
+            onClick={() => setPage(paginaActual + 1)}
+          >
+            Siguiente
+          </Button>
+        </div>
+      </div>
 
       {editando && (
         <MovimientoFormModal
