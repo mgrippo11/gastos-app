@@ -28,16 +28,20 @@ propiedadesRouter.post('/', async (req, res) => {
 })
 
 propiedadesRouter.put('/:id', async (req, res) => {
+  // req.params.id llega como string; Turso remoto (a diferencia del archivo
+  // local) no aplica la afinidad de tipo de la columna al bindear params, así
+  // que un '7' de texto no matchea el id 7 (INTEGER) — hay que castear.
+  const id = Number(req.params.id)
   const { nombre } = req.body as { nombre: string }
-  const selected = await db.execute({ sql: 'SELECT * FROM propiedades WHERE id = ?', args: [req.params.id] })
+  const selected = await db.execute({ sql: 'SELECT * FROM propiedades WHERE id = ?', args: [id] })
   const actual = selected.rows[0] as unknown as Propiedad | undefined
   if (!actual) return res.status(404).end()
   if (actual.nombre === NOMBRE_PROTEGIDO) {
     return res.status(400).json({ error: `"${NOMBRE_PROTEGIDO}" no se puede renombrar` })
   }
   try {
-    await db.execute({ sql: 'UPDATE propiedades SET nombre = ? WHERE id = ?', args: [nombre, req.params.id] })
-    res.json({ id: Number(req.params.id), nombre })
+    await db.execute({ sql: 'UPDATE propiedades SET nombre = ? WHERE id = ?', args: [nombre, id] })
+    res.json({ id, nombre })
   } catch (err) {
     if (esConstraintUnique(err)) return res.status(409).json({ error: 'Ya existe una propiedad con ese nombre' })
     throw err
@@ -45,7 +49,8 @@ propiedadesRouter.put('/:id', async (req, res) => {
 })
 
 propiedadesRouter.delete('/:id', async (req, res) => {
-  const selected = await db.execute({ sql: 'SELECT * FROM propiedades WHERE id = ?', args: [req.params.id] })
+  const id = Number(req.params.id)
+  const selected = await db.execute({ sql: 'SELECT * FROM propiedades WHERE id = ?', args: [id] })
   const actual = selected.rows[0] as unknown as Propiedad | undefined
   if (!actual) return res.status(404).end()
   if (actual.nombre === NOMBRE_PROTEGIDO) {
@@ -53,12 +58,12 @@ propiedadesRouter.delete('/:id', async (req, res) => {
   }
   const conteo = await db.execute({
     sql: 'SELECT COUNT(*) as count FROM movimientos WHERE propiedad_id = ?',
-    args: [req.params.id],
+    args: [id],
   })
   const count = Number((conteo.rows[0] as unknown as { count: number | bigint }).count)
   if (count > 0) {
     return res.status(409).json({ error: `Tiene ${count} movimiento(s) asociado(s), no se puede borrar` })
   }
-  await db.execute({ sql: 'DELETE FROM propiedades WHERE id = ?', args: [req.params.id] })
+  await db.execute({ sql: 'DELETE FROM propiedades WHERE id = ?', args: [id] })
   res.status(204).end()
 })
