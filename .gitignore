@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.log
+*.tsbuildinfo
+
+# Base de datos local (datos reales de gastos, no versionar)
+server/data/*.db
+server/data/*.db-shm
+server/data/*.db-wal
