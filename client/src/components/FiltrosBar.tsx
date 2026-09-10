@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import type { FiltrosMovimiento } from '../lib/filtros'
 import type { Propiedad } from '../types'
 
@@ -13,6 +14,12 @@ interface Props {
   // DashboardPage no puede graficar sin elegir una sola moneda (ver totals.ts:
   // los resúmenes vienen desglosados por moneda). Oculta la opción "todas".
   requiereMoneda?: boolean
+}
+
+// Filtros "vacíos": conserva moneda cuando la página la requiere (Dashboard
+// no puede graficar sin una moneda elegida, ver totals.ts).
+function filtrosLimpios(filtros: FiltrosMovimiento, requiereMoneda?: boolean): FiltrosMovimiento {
+  return requiereMoneda ? { moneda: filtros.moneda } : {}
 }
 
 const selectClass = 'border border-border bg-card rounded px-2 py-1'
@@ -73,17 +80,22 @@ export function FiltrosBar({ filtros, onChange, propiedades, mostrarTipo, mostra
 
       <input
         type="date"
+        aria-label="Desde"
         value={filtros.desde ?? ''}
         onChange={(e) => onChange({ ...filtros, desde: e.target.value || undefined })}
         className={selectClass}
       />
-      <span className="text-muted-foreground">a</span>
       <input
         type="date"
+        aria-label="Hasta"
         value={filtros.hasta ?? ''}
         onChange={(e) => onChange({ ...filtros, hasta: e.target.value || undefined })}
         className={selectClass}
       />
+
+      <Button variant="ghost" onClick={() => onChange(filtrosLimpios(filtros, requiereMoneda))}>
+        Limpiar filtros
+      </Button>
     </div>
   )
 }
