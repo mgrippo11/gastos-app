@@ -30,7 +30,8 @@ async function migrate() {
       tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'pago')),
       monto REAL NOT NULL,
       fecha TEXT NOT NULL,
-      moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD'))
+      moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD')),
+      medio_pago TEXT NOT NULL DEFAULT 'cuenta' CHECK (medio_pago IN ('efectivo', 'cuenta'))
     )
   `)
 
@@ -41,6 +42,15 @@ async function migrate() {
   if (!tieneColumnaMoneda) {
     await db.execute(
       `ALTER TABLE movimientos ADD COLUMN moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD'))`,
+    )
+  }
+
+  // Migración para DBs creadas antes de agregar medio_pago — movimientos
+  // históricos quedan todos como "cuenta" (default pedido).
+  const tieneColumnaMedioPago = info.rows.some((col) => col.name === 'medio_pago')
+  if (!tieneColumnaMedioPago) {
+    await db.execute(
+      `ALTER TABLE movimientos ADD COLUMN medio_pago TEXT NOT NULL DEFAULT 'cuenta' CHECK (medio_pago IN ('efectivo', 'cuenta'))`,
     )
   }
 

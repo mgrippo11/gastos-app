@@ -12,6 +12,7 @@ describe('rowToMovimiento', () => {
         monto: 100000,
         fecha: '2026-08-01',
         moneda: 'ARS',
+        medio_pago: 'efectivo',
       }),
     ).toEqual({
       id: 1,
@@ -21,6 +22,7 @@ describe('rowToMovimiento', () => {
       monto: 100000,
       fecha: '2026-08-01',
       moneda: 'ARS',
+      medioPago: 'efectivo',
     })
   })
 })

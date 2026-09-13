@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Moneda, Movimiento, MovimientoInput, Propiedad, TipoMovimiento } from '../types'
+import type { MedioPago, Moneda, Movimiento, MovimientoInput, Propiedad, TipoMovimiento } from '../types'
 import { Button } from './Button'
 
 interface Props {
@@ -19,6 +19,7 @@ export function MovimientoFormModal({ propiedades, movimiento, onClose, onSubmit
   const [propiedadId, setPropiedadId] = useState(movimiento?.propiedadId ?? propiedades[0]?.id)
   const [tipo, setTipo] = useState<TipoMovimiento>(movimiento?.tipo ?? 'pago')
   const [moneda, setMoneda] = useState<Moneda>(movimiento?.moneda ?? 'ARS')
+  const [medioPago, setMedioPago] = useState<MedioPago>(movimiento?.medioPago ?? 'cuenta')
   const [monto, setMonto] = useState(movimiento?.monto ?? 0)
   const [fecha, setFecha] = useState(movimiento?.fecha ?? new Date().toISOString().slice(0, 10))
   const [saving, setSaving] = useState(false)
@@ -28,7 +29,7 @@ export function MovimientoFormModal({ propiedades, movimiento, onClose, onSubmit
     if (!propiedadId) return
     setSaving(true)
     try {
-      await onSubmit({ gasto, propiedadId, tipo, monto, fecha, moneda })
+      await onSubmit({ gasto, propiedadId, tipo, monto, fecha, moneda, medioPago })
       onClose()
     } finally {
       setSaving(false)
@@ -90,6 +91,18 @@ export function MovimientoFormModal({ propiedades, movimiento, onClose, onSubmit
           >
             <option value="ARS">Pesos</option>
             <option value="USD">Dólares</option>
+          </select>
+        </label>
+
+        <label className="text-sm text-muted-foreground">
+          Medio de pago
+          <select
+            value={medioPago}
+            onChange={(e) => setMedioPago(e.target.value as MedioPago)}
+            className={inputClass}
+          >
+            <option value="cuenta">Cuenta</option>
+            <option value="efectivo">Efectivo</option>
           </select>
         </label>
 

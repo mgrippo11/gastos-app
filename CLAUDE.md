@@ -78,6 +78,7 @@ Notas sobre los datos reales:
 - **Fechas**: guardar en formato ISO (`yyyy-mm-dd`) en DB y en la API; mostrar en UI como `d/m/yyyy`. Ver `formatDateARS` / `parseDateARS` en el mismo archivo.
 - **Tipo**: enum estricto `'ingreso' | 'pago'` de punta a punta (DB, API, tipos TS) — nunca texto libre.
 - **Moneda**: enum estricto `'ARS' | 'USD'`, mismo criterio que Tipo. Los resúmenes de `totals.ts` nunca suman montos de monedas distintas — ver esa sección más abajo.
+- **Medio de pago**: enum estricto `'efectivo' | 'cuenta'`, mismo criterio que Tipo/Moneda. Default `'cuenta'` (movimientos históricos y nuevos sin elegir explícitamente quedan en cuenta).
 
 ## Funcionalidades
 

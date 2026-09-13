@@ -3,6 +3,7 @@
 
 export type TipoMovimiento = 'ingreso' | 'pago'
 export type Moneda = 'ARS' | 'USD'
+export type MedioPago = 'efectivo' | 'cuenta'
 
 export interface Propiedad {
   id: number
@@ -19,6 +20,7 @@ export interface Movimiento {
   // Fecha en formato ISO (yyyy-mm-dd).
   fecha: string
   moneda: Moneda
+  medioPago: MedioPago
 }
 
 export type MovimientoInput = Omit<Movimiento, 'id'>

@@ -13,8 +13,8 @@ movimientosRouter.get('/', async (_req, res) => {
 movimientosRouter.post('/', async (req, res) => {
   const input = req.body as MovimientoInput
   const result = await db.execute({
-    sql: 'INSERT INTO movimientos (gasto, propiedad_id, tipo, monto, fecha, moneda) VALUES (?, ?, ?, ?, ?, ?)',
-    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda],
+    sql: 'INSERT INTO movimientos (gasto, propiedad_id, tipo, monto, fecha, moneda, medio_pago) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago],
   })
 
   const selected = await db.execute({
@@ -31,8 +31,8 @@ movimientosRouter.put('/:id', async (req, res) => {
   const id = Number(req.params.id)
   const input = req.body as MovimientoInput
   await db.execute({
-    sql: 'UPDATE movimientos SET gasto = ?, propiedad_id = ?, tipo = ?, monto = ?, fecha = ?, moneda = ? WHERE id = ?',
-    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, id],
+    sql: 'UPDATE movimientos SET gasto = ?, propiedad_id = ?, tipo = ?, monto = ?, fecha = ?, moneda = ?, medio_pago = ? WHERE id = ?',
+    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago, id],
   })
 
   const selected = await db.execute({ sql: 'SELECT * FROM movimientos WHERE id = ?', args: [id] })

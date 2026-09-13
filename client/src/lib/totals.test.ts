@@ -3,10 +3,10 @@ import type { Movimiento } from '../types'
 import { balanceGeneral, resumenMensual, resumenPorPropiedad } from './totals'
 
 const movimientos: Movimiento[] = [
-  { id: 1, gasto: 'Alquiler', propiedadId: 1, tipo: 'ingreso', monto: 100000, fecha: '2026-01-05', moneda: 'ARS' },
-  { id: 2, gasto: 'Expensas', propiedadId: 1, tipo: 'pago', monto: 20000, fecha: '2026-01-10', moneda: 'ARS' },
-  { id: 3, gasto: 'Alquiler', propiedadId: 2, tipo: 'ingreso', monto: 80000, fecha: '2026-02-05', moneda: 'ARS' },
-  { id: 4, gasto: 'Fee USD', propiedadId: 1, tipo: 'ingreso', monto: 300, fecha: '2026-01-20', moneda: 'USD' },
+  { id: 1, gasto: 'Alquiler', propiedadId: 1, tipo: 'ingreso', monto: 100000, fecha: '2026-01-05', moneda: 'ARS', medioPago: 'cuenta' },
+  { id: 2, gasto: 'Expensas', propiedadId: 1, tipo: 'pago', monto: 20000, fecha: '2026-01-10', moneda: 'ARS', medioPago: 'cuenta' },
+  { id: 3, gasto: 'Alquiler', propiedadId: 2, tipo: 'ingreso', monto: 80000, fecha: '2026-02-05', moneda: 'ARS', medioPago: 'cuenta' },
+  { id: 4, gasto: 'Fee USD', propiedadId: 1, tipo: 'ingreso', monto: 300, fecha: '2026-01-20', moneda: 'USD', medioPago: 'cuenta' },
 ]
 
 describe('resumenPorPropiedad', () => {

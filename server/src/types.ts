@@ -3,6 +3,7 @@
 
 export type TipoMovimiento = 'ingreso' | 'pago'
 export type Moneda = 'ARS' | 'USD'
+export type MedioPago = 'efectivo' | 'cuenta'
 
 export interface Propiedad {
   id: number
@@ -17,6 +18,7 @@ export interface Movimiento {
   monto: number
   fecha: string
   moneda: Moneda
+  medioPago: MedioPago
 }
 
 export type MovimientoInput = Omit<Movimiento, 'id'>
@@ -30,6 +32,7 @@ export interface MovimientoRow {
   monto: number
   fecha: string
   moneda: Moneda
+  medio_pago: MedioPago
 }
 
 export function rowToMovimiento(row: MovimientoRow): Movimiento {
@@ -41,5 +44,6 @@ export function rowToMovimiento(row: MovimientoRow): Movimiento {
     monto: row.monto,
     fecha: row.fecha,
     moneda: row.moneda,
+    medioPago: row.medio_pago,
   }
 }

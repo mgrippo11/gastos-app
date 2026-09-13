@@ -109,6 +109,7 @@ export function MovimientosPage() {
               <th className="py-2 px-4">Propiedad</th>
               <th className="py-2 px-4">Tipo</th>
               <th className="py-2 px-4">Moneda</th>
+              <th className="py-2 px-4">Medio</th>
               <th className="py-2 px-4 text-right">Monto</th>
               <th className="py-2 px-4">Fecha</th>
               <th className="py-2 px-4"></th>
@@ -127,6 +128,7 @@ export function MovimientosPage() {
                 <td className="py-2 px-4">
                   <Badge>{m.moneda}</Badge>
                 </td>
+                <td className="py-2 px-4">{m.medioPago === 'efectivo' ? 'Efectivo' : 'Cuenta'}</td>
                 <td className="py-2 px-4 text-right">{formatCurrency(m.monto, m.moneda)}</td>
                 <td className="py-2 px-4">{formatDateARS(m.fecha)}</td>
                 <td className="py-2 px-4 text-right whitespace-nowrap">
