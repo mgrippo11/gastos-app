@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Movimiento } from '../types'
-import { balanceGeneral, resumenMensual, resumenPorPropiedad } from './totals'
+import { balanceGeneral, balancePorMedioPago, resumenMensual, resumenPorPropiedad } from './totals'
 
 const movimientos: Movimiento[] = [
   { id: 1, gasto: 'Alquiler', propiedadId: 1, tipo: 'ingreso', monto: 100000, fecha: '2026-01-05', moneda: 'ARS', medioPago: 'cuenta' },
@@ -52,5 +52,16 @@ describe('resumenMensual', () => {
 describe('balanceGeneral', () => {
   it('suma ingresos y resta pagos, desglosado por moneda', () => {
     expect(balanceGeneral(movimientos)).toEqual({ ARS: 160000, USD: 300 })
+  })
+})
+
+describe('balancePorMedioPago', () => {
+  it('desglosa el balance por moneda y medio de pago', () => {
+    const conEfectivo: Movimiento[] = [
+      ...movimientos,
+      { id: 5, gasto: 'Propina', propiedadId: 1, tipo: 'pago', monto: 5000, fecha: '2026-01-15', moneda: 'ARS', medioPago: 'efectivo' },
+    ]
+    expect(balancePorMedioPago(conEfectivo)).toContainEqual({ moneda: 'ARS', medioPago: 'cuenta', monto: 160000 })
+    expect(balancePorMedioPago(conEfectivo)).toContainEqual({ moneda: 'ARS', medioPago: 'efectivo', monto: -5000 })
   })
 })

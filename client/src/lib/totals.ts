@@ -1,4 +1,4 @@
-import type { Moneda, Movimiento, Propiedad } from '../types'
+import type { MedioPago, Moneda, Movimiento, Propiedad } from '../types'
 
 export interface ResumenPropiedad {
   propiedadId: number
@@ -77,6 +77,25 @@ export function balanceGeneral(movimientos: Movimiento[]): Partial<Record<Moneda
     balances[m.moneda] = (balances[m.moneda] ?? 0) + (m.tipo === 'ingreso' ? m.monto : -m.monto)
   }
   return balances
+}
+
+export interface BalancePorMedioPago {
+  moneda: Moneda
+  medioPago: MedioPago
+  monto: number
+}
+
+// Mismo balance que balanceGeneral, pero desglosado también por medio de pago
+// (para mostrar cuánto de la caja está en efectivo vs. en cuenta).
+export function balancePorMedioPago(movimientos: Movimiento[]): BalancePorMedioPago[] {
+  const balances = new Map<string, BalancePorMedioPago>()
+  for (const m of movimientos) {
+    const key = `${m.moneda}-${m.medioPago}`
+    const actual = balances.get(key) ?? { moneda: m.moneda, medioPago: m.medioPago, monto: 0 }
+    actual.monto += m.tipo === 'ingreso' ? m.monto : -m.monto
+    balances.set(key, actual)
+  }
+  return [...balances.values()]
 }
 
 export function nombrePropiedad(propiedades: Propiedad[], propiedadId: number): string {

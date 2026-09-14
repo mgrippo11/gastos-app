@@ -7,7 +7,7 @@ import { MovimientoFormModal } from '../components/MovimientoFormModal'
 import { api } from '../lib/api'
 import { formatCurrency, formatDateARS } from '../lib/format'
 import { filtrarMovimientos, type FiltrosMovimiento } from '../lib/filtros'
-import { balanceGeneral, nombrePropiedad, resumenPorPropiedad } from '../lib/totals'
+import { balanceGeneral, balancePorMedioPago, nombrePropiedad, resumenPorPropiedad } from '../lib/totals'
 import type { Movimiento, Propiedad } from '../types'
 
 // Listado de movimientos con filtros (propiedad, tipo, moneda, rango de
@@ -43,6 +43,7 @@ export function MovimientosPage() {
   const filtrados = filtrarMovimientos(movimientos, filtros)
   // Caja: siempre sobre todos los movimientos, sin importar los filtros de la tabla.
   const caja = balanceGeneral(movimientos)
+  const cajaPorMedio = balancePorMedioPago(movimientos)
   const porPropiedad = resumenPorPropiedad(movimientos)
 
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / pageSize))
@@ -74,11 +75,19 @@ export function MovimientosPage() {
           ) : (
             <div className="flex items-center divide-x divide-border">
               {Object.entries(caja).map(([moneda, monto]) => (
-                <div
-                  key={moneda}
-                  className={`px-4 text-xl font-semibold ${monto < 0 ? 'text-danger' : 'text-success'}`}
-                >
-                  {formatCurrency(monto, moneda as Movimiento['moneda'])}
+                <div key={moneda} className="px-4 flex flex-col items-center">
+                  <div className={`text-xl font-semibold ${monto < 0 ? 'text-danger' : 'text-success'}`}>
+                    {formatCurrency(monto, moneda as Movimiento['moneda'])}
+                  </div>
+                  <div className="text-xs text-muted-foreground flex gap-2">
+                    {cajaPorMedio
+                      .filter((c) => c.moneda === moneda)
+                      .map((c) => (
+                        <span key={c.medioPago}>
+                          {c.medioPago === 'efectivo' ? 'Efectivo' : 'Cuenta'}: {formatCurrency(c.monto, c.moneda)}
+                        </span>
+                      ))}
+                  </div>
                 </div>
               ))}
             </div>
