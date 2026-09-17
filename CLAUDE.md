@@ -8,28 +8,13 @@ App de gestión de gastos e ingresos para varias propiedades (alquileres, expens
 
 ## Stack
 
-npm workspaces monorepo, dos paquetes:
-
-- **client/** — React 19 + Vite + TypeScript + Tailwind CSS v4 (vía `@tailwindcss/vite`), Recharts para gráficos, react-router-dom para ruteo entre páginas.
-- **server/** — Express 5 + TypeScript, SQLite vía `@libsql/client` (libSQL: superset compatible de SQLite, mismo SQL).
-- **api/** — un único archivo (`[...path].ts`) que reexporta la app Express de `server/src/app.ts` como Vercel Function, para el deploy en producción.
-- **Tests**: Vitest en ambos paquetes.
-- **Lint**: `oxlint` (solo configurado en client por ahora).
+npm workspaces monorepo, dos paquetes (`client/`, `server/`) — ver `package.json` de cada uno para el detalle de dependencias.
 
 Dev local: `@libsql/client` apunta a un archivo (`server/data/gastos.db`, gitignorado) — cero servicios externos, cero cuenta necesaria para desarrollar. Producción (Vercel): las funciones serverless no tienen disco persistente, así que ahí el mismo cliente apunta a una DB hosteada en Turso vía `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` (ver [server/src/db.ts](server/src/db.ts) y sección "Deploy" más abajo). Antes de esto el proyecto usaba `better-sqlite3` (archivo únicamente, sin esta rama); se migró a libSQL específicamente para poder desplegar en Vercel sin cambiar de motor de DB.
 
 ## Comandos
 
-Todos corren desde la raíz del repo (usa `npm run <script> -w <workspace>` por debajo):
-
-```bash
-npm run dev          # server (puerto 3001) + client (puerto 5173) en paralelo, con proxy /api -> server
-npm run dev:server    # solo server (tsx watch, recarga en caliente)
-npm run dev:client    # solo client (vite)
-npm run build          # build de producción de ambos (server primero)
-npm test                # test suite completa (server, luego client)
-npm run lint             # oxlint sobre client
-```
+Todos corren desde la raíz del repo (usa `npm run <script> -w <workspace>` por debajo) — ver `scripts` en el `package.json` raíz para la lista completa (`dev`, `build`, `test`, `lint`, etc.).
 
 Para un solo workspace: `npm run test -w client`, `npm run test -w server`, etc.
 
