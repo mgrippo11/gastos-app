@@ -14,7 +14,7 @@ movimientosRouter.post('/', async (req, res) => {
   const input = req.body as MovimientoInput
   const result = await db.execute({
     sql: 'INSERT INTO movimientos (gasto, propiedad_id, tipo, monto, fecha, moneda, medio_pago) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago],
+    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago ?? 'cuenta'],
   })
 
   const selected = await db.execute({
@@ -32,7 +32,7 @@ movimientosRouter.put('/:id', async (req, res) => {
   const input = req.body as MovimientoInput
   await db.execute({
     sql: 'UPDATE movimientos SET gasto = ?, propiedad_id = ?, tipo = ?, monto = ?, fecha = ?, moneda = ?, medio_pago = ? WHERE id = ?',
-    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago, id],
+    args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago ?? 'cuenta', id],
   })
 
   const selected = await db.execute({ sql: 'SELECT * FROM movimientos WHERE id = ?', args: [id] })

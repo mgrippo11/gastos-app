@@ -71,22 +71,14 @@ export function resumenMensual(movimientos: Movimiento[]): ResumenMensual[] {
   return [...porMes.values()].sort((a, b) => a.mes.localeCompare(b.mes))
 }
 
-export function balanceGeneral(movimientos: Movimiento[]): Partial<Record<Moneda, number>> {
-  const balances: Partial<Record<Moneda, number>> = {}
-  for (const m of movimientos) {
-    balances[m.moneda] = (balances[m.moneda] ?? 0) + (m.tipo === 'ingreso' ? m.monto : -m.monto)
-  }
-  return balances
-}
-
 export interface BalancePorMedioPago {
   moneda: Moneda
   medioPago: MedioPago
   monto: number
 }
 
-// Mismo balance que balanceGeneral, pero desglosado también por medio de pago
-// (para mostrar cuánto de la caja está en efectivo vs. en cuenta).
+// Desglosa el balance por moneda y medio de pago (para mostrar cuánto de la
+// caja está en efectivo vs. en cuenta).
 export function balancePorMedioPago(movimientos: Movimiento[]): BalancePorMedioPago[] {
   const balances = new Map<string, BalancePorMedioPago>()
   for (const m of movimientos) {
@@ -96,6 +88,16 @@ export function balancePorMedioPago(movimientos: Movimiento[]): BalancePorMedioP
     balances.set(key, actual)
   }
   return [...balances.values()]
+}
+
+// Mismo balance, sumado por moneda sin importar el medio de pago — se deriva
+// de balancePorMedioPago en vez de reimplementar la regla de signo.
+export function balanceGeneral(movimientos: Movimiento[]): Partial<Record<Moneda, number>> {
+  const balances: Partial<Record<Moneda, number>> = {}
+  for (const { moneda, monto } of balancePorMedioPago(movimientos)) {
+    balances[moneda] = (balances[moneda] ?? 0) + monto
+  }
+  return balances
 }
 
 export function nombrePropiedad(propiedades: Propiedad[], propiedadId: number): string {
