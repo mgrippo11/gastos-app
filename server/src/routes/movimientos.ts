@@ -4,6 +4,22 @@ import { rowToMovimiento, type MovimientoInput, type MovimientoRow } from '../ty
 
 export const movimientosRouter = Router()
 
+// Solo la UI llama a esta API hoy, pero no hay auth de ningún tipo — sin esto
+// un tipo/moneda/medioPago fuera del enum revienta el CHECK de la DB y sale
+// como 500 genérico en vez de un 400 con el campo que está mal.
+function errorDeValidacion(input: MovimientoInput): string | null {
+  if (!input.gasto?.trim()) return 'Gasto es obligatorio'
+  if (!Number.isInteger(input.propiedadId)) return 'Propiedad inválida'
+  if (input.tipo !== 'ingreso' && input.tipo !== 'pago') return 'Tipo inválido'
+  if (typeof input.monto !== 'number' || !(input.monto > 0)) return 'Monto debe ser un número positivo'
+  if (!input.fecha) return 'Fecha es obligatoria'
+  if (input.moneda !== 'ARS' && input.moneda !== 'USD') return 'Moneda inválida'
+  if (input.medioPago !== undefined && input.medioPago !== 'efectivo' && input.medioPago !== 'cuenta') {
+    return 'Medio de pago inválido'
+  }
+  return null
+}
+
 movimientosRouter.get('/', async (_req, res) => {
   const result = await db.execute('SELECT * FROM movimientos ORDER BY fecha DESC, id DESC')
   const rows = result.rows as unknown as MovimientoRow[]
@@ -12,6 +28,9 @@ movimientosRouter.get('/', async (_req, res) => {
 
 movimientosRouter.post('/', async (req, res) => {
   const input = req.body as MovimientoInput
+  const error = errorDeValidacion(input)
+  if (error) return res.status(400).json({ error })
+
   const result = await db.execute({
     sql: 'INSERT INTO movimientos (gasto, propiedad_id, tipo, monto, fecha, moneda, medio_pago) VALUES (?, ?, ?, ?, ?, ?, ?)',
     args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago ?? 'cuenta'],
@@ -30,6 +49,9 @@ movimientosRouter.put('/:id', async (req, res) => {
   // que un '7' de texto no matchea el id 7 (INTEGER) — hay que castear.
   const id = Number(req.params.id)
   const input = req.body as MovimientoInput
+  const error = errorDeValidacion(input)
+  if (error) return res.status(400).json({ error })
+
   await db.execute({
     sql: 'UPDATE movimientos SET gasto = ?, propiedad_id = ?, tipo = ?, monto = ?, fecha = ?, moneda = ?, medio_pago = ? WHERE id = ?',
     args: [input.gasto, input.propiedadId, input.tipo, input.monto, input.fecha, input.moneda, input.medioPago ?? 'cuenta', id],

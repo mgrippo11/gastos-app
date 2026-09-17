@@ -34,8 +34,12 @@ export function MovimientosPage() {
 
   async function handleDelete(id: number) {
     if (!confirm('¿Borrar este movimiento?')) return
-    await api.deleteMovimiento(id)
-    await cargar()
+    try {
+      await api.deleteMovimiento(id)
+      await cargar()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al borrar el movimiento')
+    }
   }
 
   if (loading) return <p className="p-6 text-muted-foreground">Cargando...</p>
@@ -128,9 +132,7 @@ export function MovimientosPage() {
             {paginados.map((m) => (
               <tr key={m.id} className="border-b border-border last:border-0 hover:bg-muted/50">
                 <td className="py-2 px-4">{m.gasto}</td>
-                <td className="py-2 px-4">
-                  {propiedades.find((p) => p.id === m.propiedadId)?.nombre ?? '—'}
-                </td>
+                <td className="py-2 px-4">{nombrePropiedad(propiedades, m.propiedadId)}</td>
                 <td className="py-2 px-4">
                   <Badge tone={m.tipo === 'ingreso' ? 'success' : 'danger'}>{m.tipo}</Badge>
                 </td>
@@ -193,12 +195,17 @@ export function MovimientosPage() {
           movimiento={editando === 'nuevo' ? undefined : editando}
           onClose={() => setEditando(null)}
           onSubmit={async (input) => {
-            if (editando === 'nuevo') {
-              await api.createMovimiento(input)
-            } else {
-              await api.updateMovimiento(editando.id, input)
+            try {
+              if (editando === 'nuevo') {
+                await api.createMovimiento(input)
+              } else {
+                await api.updateMovimiento(editando.id, input)
+              }
+              await cargar()
+            } catch (err) {
+              alert(err instanceof Error ? err.message : 'Error al guardar el movimiento')
+              throw err // el modal no debe cerrarse ni limpiar el form si falló el guardado
             }
-            await cargar()
           }}
         />
       )}

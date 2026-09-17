@@ -12,6 +12,6 @@ import { dbReady } from '../server/src/db.js'
 // convención, vercel.json reescribe /api/:path* -> /api ; req.url adentro
 // de la función sigue siendo la ruta original, así que Express rutea igual.
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  await dbReady
+  await dbReady()
   app(req, res)
 }

@@ -17,7 +17,8 @@ propiedadesRouter.get('/', async (_req, res) => {
 })
 
 propiedadesRouter.post('/', async (req, res) => {
-  const { nombre } = req.body as { nombre: string }
+  const nombre = (req.body as { nombre?: string }).nombre?.trim()
+  if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' })
   try {
     const result = await db.execute({ sql: 'INSERT INTO propiedades (nombre) VALUES (?)', args: [nombre] })
     res.status(201).json({ id: Number(result.lastInsertRowid), nombre })
@@ -32,7 +33,8 @@ propiedadesRouter.put('/:id', async (req, res) => {
   // local) no aplica la afinidad de tipo de la columna al bindear params, así
   // que un '7' de texto no matchea el id 7 (INTEGER) — hay que castear.
   const id = Number(req.params.id)
-  const { nombre } = req.body as { nombre: string }
+  const nombre = (req.body as { nombre?: string }).nombre?.trim()
+  if (!nombre) return res.status(400).json({ error: 'El nombre es obligatorio' })
   const selected = await db.execute({ sql: 'SELECT * FROM propiedades WHERE id = ?', args: [id] })
   const actual = selected.rows[0] as unknown as Propiedad | undefined
   if (!actual) return res.status(404).end()

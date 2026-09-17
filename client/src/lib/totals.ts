@@ -24,6 +24,19 @@ export interface ResumenMensual {
 // total): una propiedad o un mes con movimientos en ambas monedas produce
 // dos filas, una por moneda.
 
+// Acumula un movimiento sobre un resumen parcial (ingreso suma, pago resta) —
+// única implementación de esa regla para resumenPorPropiedad y resumenMensual,
+// que solo difieren en la clave de agrupación.
+function acumular<T extends { ingresos: number; pagos: number; balance: number }>(actual: T, m: Movimiento): T {
+  if (m.tipo === 'ingreso') {
+    actual.ingresos += m.monto
+  } else {
+    actual.pagos += m.monto
+  }
+  actual.balance = actual.ingresos - actual.pagos
+  return actual
+}
+
 export function resumenPorPropiedad(movimientos: Movimiento[]): ResumenPropiedad[] {
   const porPropiedad = new Map<string, ResumenPropiedad>()
 
@@ -36,15 +49,7 @@ export function resumenPorPropiedad(movimientos: Movimiento[]): ResumenPropiedad
       pagos: 0,
       balance: 0,
     }
-
-    if (m.tipo === 'ingreso') {
-      actual.ingresos += m.monto
-    } else {
-      actual.pagos += m.monto
-    }
-    actual.balance = actual.ingresos - actual.pagos
-
-    porPropiedad.set(key, actual)
+    porPropiedad.set(key, acumular(actual, m))
   }
 
   return [...porPropiedad.values()]
@@ -57,15 +62,7 @@ export function resumenMensual(movimientos: Movimiento[]): ResumenMensual[] {
     const mes = m.fecha.slice(0, 7) // yyyy-mm
     const key = `${mes}-${m.moneda}`
     const actual = porMes.get(key) ?? { mes, moneda: m.moneda, ingresos: 0, pagos: 0, balance: 0 }
-
-    if (m.tipo === 'ingreso') {
-      actual.ingresos += m.monto
-    } else {
-      actual.pagos += m.monto
-    }
-    actual.balance = actual.ingresos - actual.pagos
-
-    porMes.set(key, actual)
+    porMes.set(key, acumular(actual, m))
   }
 
   return [...porMes.values()].sort((a, b) => a.mes.localeCompare(b.mes))

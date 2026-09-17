@@ -15,6 +15,11 @@ export const db = process.env.TURSO_DATABASE_URL
   : createClient({ url: `file:${dbPath}` })
 
 async function migrate() {
+  // SQLite (y libSQL) no aplica FKs por defecto salvo que se pida por
+  // conexión — sin esto, propiedad_id acepta cualquier id inexistente en
+  // silencio (el movimiento queda huérfano, se ve como "Desconocida" en la UI).
+  await db.execute('PRAGMA foreign_keys = ON')
+
   await db.execute(`
     CREATE TABLE IF NOT EXISTS propiedades (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,12 +33,16 @@ async function migrate() {
       gasto TEXT NOT NULL,
       propiedad_id INTEGER NOT NULL REFERENCES propiedades(id),
       tipo TEXT NOT NULL CHECK (tipo IN ('ingreso', 'pago')),
-      monto REAL NOT NULL,
+      monto REAL NOT NULL CHECK (monto > 0),
       fecha TEXT NOT NULL,
       moneda TEXT NOT NULL DEFAULT 'ARS' CHECK (moneda IN ('ARS', 'USD')),
       medio_pago TEXT NOT NULL DEFAULT 'cuenta' CHECK (medio_pago IN ('efectivo', 'cuenta'))
     )
   `)
+  // ponytail: CHECK (monto > 0) solo protege tablas creadas desde cero — SQLite
+  // no soporta agregar un CHECK a una columna existente sin reconstruir la
+  // tabla, y no vale el riesgo de hacer eso automáticamente contra la DB de
+  // Turso en producción. Si hace falta forzarlo ahí, es una migración manual.
 
   // Migración para DBs creadas antes de agregar la columna moneda (movimientos
   // históricos: todo en Pesos, ver CLAUDE.md).
@@ -69,6 +78,18 @@ async function migrate() {
   }
 }
 
-// Se importa una sola vez al arrancar (index.ts / la Vercel function esperan
-// esta promesa antes de aceptar requests).
-export const dbReady = migrate()
+// index.ts / la Vercel function esperan dbReady() antes de aceptar requests.
+// Una promesa rechazada queda rechazada para siempre — sin este wrapper, un
+// fallo transitorio en el cold start (blip de red a Turso) dejaría esa
+// instancia tirando 500 en todos los requests siguientes hasta que Vercel la
+// recicle. Reintenta la migración en el próximo llamado si la anterior falló.
+let migracion: Promise<void> | null = null
+export function dbReady(): Promise<void> {
+  if (!migracion) {
+    migracion = migrate().catch((err) => {
+      migracion = null
+      throw err
+    })
+  }
+  return migracion
+}
